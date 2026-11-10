@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -20 400 430" width="800" height="860" role="img" aria-label="Press Green logo: a finger pressing a green button framed by smoke, with PRESS GREEN below" overflow="visible">
+<defs>
+<style>@import url("https://fonts.googleapis.com/css2?family=Lilita+One&amp;display=swap");</style>
+<filter id="wispD" x="-60%" y="-60%" width="220%" height="220%">
+<feTurbulence type="fractalNoise" baseFrequency="0.014 0.032" numOctaves="2" seed="21" result="n"></feTurbulence>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="30" xChannelSelector="R" yChannelSelector="G" result="d"></feDisplacementMap>
+<feGaussianBlur in="d" stdDeviation="5"></feGaussianBlur>
+</filter>
+<filter id="hazeD" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="12"></feGaussianBlur></filter>
+<linearGradient id="riseD" gradientUnits="userSpaceOnUse" x1="0" y1="320" x2="0" y2="10">
+<stop offset="0" stop-color="#F1F4F2" stop-opacity="0.95"></stop>
+<stop offset="0.55" stop-color="#DDE3DF" stop-opacity="0.6"></stop>
+<stop offset="1" stop-color="#DDE3DF" stop-opacity="0"></stop>
+</linearGradient>
+<linearGradient id="shadeD" gradientUnits="userSpaceOnUse" x1="0" y1="320" x2="0" y2="10">
+<stop offset="0" stop-color="#4E5A53" stop-opacity="0.45"></stop>
+<stop offset="0.55" stop-color="#4E5A53" stop-opacity="0.22"></stop>
+<stop offset="1" stop-color="#4E5A53" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<g transform="translate(36 -4) scale(0.82)">
+<g fill="none" stroke-linecap="round" stroke="url(#shadeD)" filter="url(#hazeD)">
+<path d="M300 300 C 342 268, 290 230, 330 194 S 384 130, 344 94 S 330 48, 362 22" stroke-width="40"></path>
+<path d="M100 300 C 58 268, 110 230, 70 194 S 16 130, 56 94 S 70 48, 38 22" stroke-width="34"></path>
+</g>
+<g fill="none" stroke-linecap="round" stroke="url(#riseD)" filter="url(#wispD)">
+<path d="M300 300 C 342 268, 290 230, 330 194 S 384 130, 344 94 S 330 48, 362 22" stroke-width="28"></path>
+<path d="M318 302 C 362 282, 352 240, 374 208 S 404 150, 390 116" stroke-width="16"></path>
+<path d="M100 300 C 58 268, 110 230, 70 194 S 16 130, 56 94 S 70 48, 38 22" stroke-width="24"></path>
+<path d="M82 302 C 38 282, 48 240, 26 208" stroke-width="12"></path>
+</g>
+<rect x="84" y="296" width="232" height="40" rx="10" fill="#3A443D" stroke="#121614" stroke-width="7"></rect>
+<path d="M110 300 L121 260 Q124 250 136 250 L264 250 Q276 250 279 260 L290 300 Z" fill="#2BD15A" stroke="#121614" stroke-width="7" stroke-linejoin="round"></path>
+<path d="M136 271 L162 271" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="8" stroke-linecap="round" fill="none"></path>
+<g transform="translate(209 228) rotate(25)" stroke="#121614" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+<rect x="-46" y="-218" width="92" height="58" rx="14" fill="#3A443D"></rect>
+<path d="M-35 -164 L-35 -13 A 35 35 0 0 0 35 -13 L35 -164 Z" fill="#F4B898"></path>
+<path d="M21 -162 L21 -16 Q21 6 4 16 Q33 10 32 -16 L32 -162 Z" fill="#E99E7C" stroke="none"></path>
+<path d="M-31 -46 Q-31 -54 -23 -54 L-11 -54 Q-3 -54 -3 -46 L-3 -10 Q-3 4 -17 4 Q-31 4 -31 -10 Z" fill="#F9D3C0" stroke-width="5"></path>
+<path d="M-27 -26 Q-27 -2 -17 -1 Q-7 -2 -7 -26 Z" fill="#FDE9DF" stroke="none"></path>
+<path d="M-14 -112 L4 -110 M-12 -124 L2 -123" fill="none" stroke-width="5"></path>
+</g>
+<ellipse cx="200" cy="336" rx="170" ry="16" fill="#F1F4F2" opacity="0.55" filter="url(#hazeD)"></ellipse>
+</g>
+<g font-family="Lilita One, sans-serif" font-size="58" letter-spacing="3" text-anchor="middle" stroke="#000000" stroke-width="14" stroke-linejoin="round" paint-order="stroke">
+<text x="200" y="356" fill="#000000" transform="translate(0 6)">PRESS GREEN</text>
+<text x="200" y="356" fill="#FFFFFF">PRESS <tspan fill="#2BD15A">GREEN</tspan></text>
+</g>
+</svg>

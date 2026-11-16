@@ -7,6 +7,7 @@ Plain HTML, no build step. Served by GitHub Pages at **https://press-green.githu
 | `index.html` | Studio, games, company details (legal name, CNPJ, contact, GitHub) |
 | `privacy.html` | Privacy policy for the games, English and Portuguese (LGPD) |
 | `delete-account.html` | Account deletion steps, the URL Google Play asks for |
+| `app-ads.txt` | AdMob seller declaration (`pub-7594635169599691`); must stay at the root |
 | `404.html`, `robots.txt`, `sitemap.xml`, `site.webmanifest` | The usual extras |
 | `assets/` | `logo.svg` (source), `icon.svg` (logo without the wordmark), PNGs rendered from them |
 

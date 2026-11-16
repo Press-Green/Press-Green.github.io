@@ -58,6 +58,13 @@ h3 { font-size: 18px; margin: 24px 0 8px; }
 .card h3 { margin: 0 0 4px; }
 .card p { margin: 0; color: var(--muted); }
 
+.card p.store { margin-top: 12px; }
+.button {
+  display: inline-block; font-weight: 600; font-size: 15px; padding: 8px 16px; border-radius: 99px;
+  background: var(--green); color: var(--green-ink); text-decoration: none;
+}
+.button:hover { filter: brightness(1.1); }
+
 .badge {
   display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 99px;
   background: var(--green); color: var(--green-ink); margin-left: 6px; vertical-align: 2px;

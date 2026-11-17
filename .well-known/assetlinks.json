@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.pressgreen.wordseed",
+      "sha256_cert_fingerprints": [
+        "61:A1:01:6A:84:59:95:8B:B1:D6:2F:03:44:0D:88:D4:50:46:56:5C:F9:E1:CC:09:D7:57:4F:2C:87:F9:7C:3B"
+      ]
+    }
+  }
+]

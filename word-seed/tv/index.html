@@ -65,6 +65,7 @@
     .button:focus-visible { outline: 0.15em solid var(--text); outline-offset: 0.15em; }
     .button:disabled { opacity: 0.4; cursor: default; }
     #entry-error { color: var(--error); min-height: 1.6em; }
+    #entry-go { background: var(--surface-2); color: var(--text); }
 
     /* A room: a bar on top, the stage below. */
     #room { flex-direction: column; }
@@ -181,6 +182,8 @@
   <main id="entry" class="view">
     <h1 class="brand">WORD <b>SEED</b> TV</h1>
     <p id="entry-intro"></p>
+    <button class="button" id="entry-create" type="button"></button>
+    <p id="entry-or" class="muted"></p>
     <form id="entry-form" autocomplete="off">
       <input id="code-input" maxlength="4" inputmode="text" autocapitalize="characters" spellcheck="false" aria-label="Room code" placeholder="ABCD">
       <button class="button" id="entry-go" type="submit"></button>
@@ -207,6 +210,7 @@
   const params = new URLSearchParams(location.search);
   /** The API's socket origin. `?api=ws://localhost:3000` points a test at a local API. */
   const API = params.get('api') || 'wss://word-seed-api.pressgreen420.workers.dev';
+  const HTTP_API = API.replace(/^ws/, 'http');
   /** Room codes: 4 consonants (word-seed-api/src/rooms/service.ts). */
   const CODE_LETTERS = 'BCDFGHJKLMNPQRSTVWXZ';
   const CODE_PATTERN = new RegExp('^[' + CODE_LETTERS + ']{4}$');
@@ -218,7 +222,10 @@
   const STRINGS = {
     'pt-BR': {
       intro: 'Mostre uma sala de multijogador na TV: o tabuleiro, o tempo, os pontos e, no fim, todas as palavras.',
-      go: 'Mostrar sala', codeLabel: 'Sala',
+      go: 'Mostrar', codeLabel: 'Sala',
+      create: 'Abrir uma sala nesta TV', or: 'ou mostre uma sala que já existe:',
+      opening: 'Abrindo uma sala…', createFailed: 'Não deu para abrir uma sala. Confira a internet e tente de novo.',
+      firstHosts: 'Quem entrar primeiro comanda a sala.',
       badCode: 'O código tem 4 letras, como no app.',
       notFound: 'Sala não encontrada. Confira o código no app.',
       closed: 'A sala foi fechada.', full: 'Esta sala já tem TVs demais.', outdated: 'O servidor ainda não aceita TVs. Tente mais tarde.',
@@ -239,7 +246,10 @@
     },
     en: {
       intro: 'Show a multiplayer room on the TV: the board, the clock, the scores and, at the end, every word.',
-      go: 'Show room', codeLabel: 'Room',
+      go: 'Show', codeLabel: 'Room',
+      create: 'Open a room on this TV', or: 'or show a room that already exists:',
+      opening: 'Opening a room…', createFailed: 'Couldn’t open a room. Check the internet and try again.',
+      firstHosts: 'The first player to join runs the room.',
       badCode: 'The code has 4 letters, as in the app.',
       notFound: 'Room not found. Check the code in the app.',
       closed: 'The room closed.', full: 'This room has too many TVs already.', outdated: 'The server doesn’t take TVs yet. Try again later.',
@@ -283,9 +293,36 @@
     $('entry').hidden = false;
     $('entry-intro').textContent = t().intro;
     $('entry-go').textContent = t().go;
+    $('entry-create').textContent = t().create;
+    $('entry-or').textContent = t().or;
     $('entry-error').textContent = error || '';
     history.replaceState(null, '', location.pathname + (params.get('api') ? `?api=${encodeURIComponent(params.get('api'))}` : ''));
-    $('code-input').focus();
+    $('entry-create').focus();
+  }
+  $('entry-create').addEventListener('click', () => createRoom());
+
+  /**
+   * Opens a room of the TV's own (no sign-in): its code and QR code show right away, and the
+   * first player to join hosts it. Played in the TV's language until the host picks another.
+   */
+  async function createRoom() {
+    $('entry').hidden = true;
+    $('room').hidden = false;
+    $('room-code').textContent = '';
+    $('stage').replaceChildren();
+    setStatus(t().opening);
+    try {
+      const response = await fetch(`${HTTP_API}/rooms/screen`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ language: lang }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const { code } = await response.json();
+      openRoom(code, true);
+    } catch {
+      showEntry(t().createFailed);
+    }
   }
   $('code-input').addEventListener('input', (event) => {
     const input = event.target;
@@ -299,15 +336,17 @@
     openRoom(code);
   });
 
-  function openRoom(code) {
+  /** Shows a room; `own` when this TV opened it (it opens a new one if this one closes). */
+  function openRoom(code, own = false) {
     const query = new URLSearchParams({ code });
+    if (own) query.set('own', '1');
     if (params.get('api')) query.set('api', params.get('api'));
     history.replaceState(null, '', `${location.pathname}?${query}`);
     $('entry').hidden = true;
     $('room').hidden = false;
     $('room-code').textContent = code;
     $('code-label').textContent = t().codeLabel;
-    room.open(code);
+    room.open(code, own);
     keepAwake();
   }
 
@@ -317,9 +356,11 @@
     state: null,
     /** The match on screen: its cells and its times on this clock. */
     match: null,
-    open(code) {
+    own: false,
+    open(code, own) {
       this.close();
       this.code = code;
+      this.own = own;
       this.state = null;
       this.match = null;
       this.tries = 0;
@@ -344,6 +385,8 @@
         if (this.socket !== socket) return;
         clearInterval(this.ping);
         this.socket = null;
+        // This TV's own room closed (nobody played for a while): a fresh one takes its place.
+        if ((event.code === 4004 || event.code === 1001) && this.own) return void createRoom();
         if (event.code === 4004) return showEntry(this.state ? t().closed : t().notFound);
         if (event.code === 1001) return showEntry(t().closed);
         if (event.code === 4009) return showEntry(t().full);
@@ -485,7 +528,7 @@
       el('span', { class: 'chip' }, t().hive[config.hive] || config.hive),
       el('span', { class: 'chip' }, t().grows(config.growEvery)));
     const host = state.players.find((p) => p.id === state.hostId);
-    $('lobby-waiting').textContent = state.players.length ? t().waitingHost(host && host.nick) : '';
+    $('lobby-waiting').textContent = state.players.length ? t().waitingHost(host && host.nick) : t().firstHosts;
   }
 
   function buildMatch(stage) {
@@ -754,8 +797,9 @@
 
   // ---- Start ----------------------------------------------------------------------------------
   const startCode = (params.get('code') || '').toUpperCase();
-  if (CODE_PATTERN.test(startCode)) openRoom(startCode);
-  else showEntry();
+  // A code in the address (a refresh, or a room picked by hand) is shown; otherwise the TV opens one.
+  if (CODE_PATTERN.test(startCode)) openRoom(startCode, params.get('own') === '1');
+  else createRoom();
   </script>
 </body>
 </html>

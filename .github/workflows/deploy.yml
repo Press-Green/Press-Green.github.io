@@ -1,0 +1,58 @@
+# Builds the site and publishes it on GitHub Pages at every push to main.
+# One-time setup: repository → Settings → Pages → Source: "GitHub Actions".
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a newer push takes over a waiting one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run build
+      # URLs that live outside this repo (Play Console, AdMob, Android App Links, the app's QR
+      # codes): a build without one of them must not go live.
+      - name: Check fixed URLs
+        working-directory: build
+        run: |
+          for file in index.html privacy.html delete-account.html 404.html app-ads.txt \
+            .well-known/assetlinks.json google3654326ff1b82ec7.html robots.txt sitemap.xml \
+            word-seed/join/index.html word-seed/tv/index.html; do
+            test -s "$file" || { echo "::error::missing $file"; exit 1; }
+          done
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: build
+          # Keeps .well-known/assetlinks.json (Android App Links) and .nojekyll.
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

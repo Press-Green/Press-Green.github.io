@@ -12,3 +12,9 @@ desktop.ini
 # Never publish
 .env
 .env.*
+
+# Build
+node_modules/
+/.svelte-kit/
+/build/
+vite.config.ts.timestamp-*

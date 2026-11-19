@@ -1,0 +1,62 @@
+/*
+ * WORD SEED's dark theme (word-seed-game/src/constants/theme.ts): a TV is watched in the dark.
+ * Every rule sits under .word-seed (routes/word-seed/+layout.svelte's wrapper), apart from the
+ * studio pages' look (lib/site/site.css), which the error page loads everywhere.
+ */
+html:has(.word-seed) {
+	background: #1c2e1a;
+}
+body {
+	margin: 0;
+}
+.word-seed {
+	--bg: #1c2e1a;
+	--surface: #2f4a2b;
+	--surface-2: #3d5a38;
+	--text: #fbf4e6;
+	--muted: #cfc2a8;
+	--primary: #8fd46a;
+	--on-primary: #1c2e1a;
+	--gold: #f7c548;
+	--error: #e8957a;
+	--tile: #f4cf9c;
+	--tile-edge: #c08a50;
+	--tile-text: #4a3324;
+	color-scheme: dark;
+	min-height: 100vh;
+	background: var(--bg);
+	color: var(--text);
+	font-family: Fredoka, system-ui, sans-serif;
+	font-weight: 500;
+}
+.word-seed,
+.word-seed * {
+	box-sizing: border-box;
+}
+.word-seed [hidden] {
+	display: none !important;
+}
+.word-seed button,
+.word-seed input {
+	font: inherit;
+}
+.word-seed .muted {
+	color: var(--muted);
+}
+.word-seed .brand {
+	font-weight: 700;
+	letter-spacing: 0.04em;
+}
+.word-seed .brand b {
+	color: var(--primary);
+}
+.word-seed .dot {
+	display: inline-block;
+	width: 0.6em;
+	height: 0.6em;
+	border-radius: 50%;
+	flex: none;
+}
+.word-seed .star {
+	color: var(--gold);
+}

@@ -16,7 +16,7 @@
 	onMount(() => {
 		tv = new Tv();
 		// Ready before the results, and listening for the first click or key that unlocks audio.
-		for (const name of ['countdown', 'word', 'tick', 'timesUp', 'winner'] as const) preload(name);
+		for (const name of ['countdown', 'tile', 'found', 'tick', 'timesUp', 'winner'] as const) preload(name);
 		preloadMusic();
 		document.documentElement.lang = tv.lang;
 		const stop = tv.start();

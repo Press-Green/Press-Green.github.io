@@ -63,7 +63,7 @@
 
 <div class="match">
 	<div class="board-box">
-		<Board {match} hidden={toStart > 0} />
+		<Board cells={match.cells} fresh={match.fresh} hidden={toStart > 0} />
 		<div class="countdown" aria-live="assertive">
 			{#if toStart > 0}
 				{#key Math.ceil(toStart / 1000)}

@@ -6,8 +6,12 @@ import tickMp3 from './sounds/tick.mp3';
 import tickOgg from './sounds/tick.ogg';
 import winnerMp3 from './sounds/winner.mp3';
 import winnerOgg from './sounds/winner.ogg';
-import wordMp3 from './sounds/word.mp3';
-import wordOgg from './sounds/word.ogg';
+import chipsMp3 from './sounds/chips.mp3';
+import chipsOgg from './sounds/chips.ogg';
+import tileMp3 from './sounds/tile.mp3';
+import tileOgg from './sounds/tile.ogg';
+import foundMp3 from './sounds/word-found.mp3';
+import foundOgg from './sounds/word-found.ogg';
 
 /**
  * Short sound effects through Web Audio: each play starts a new source, so quick repeats overlap
@@ -16,8 +20,12 @@ import wordOgg from './sounds/word.ogg';
  */
 
 const SOURCES = {
-	/** A word shows up in the results. */
-	word: { ogg: wordOgg, mp3: wordMp3 },
+	/** The results: each letter of the word being replayed, as its tile is pressed (the app's own sound). */
+	tile: { ogg: tileOgg, mp3: tileMp3 },
+	/** A stack of chips: tried for the letters of the results' replay, not used for now. */
+	chips: { ogg: chipsOgg, mp3: chipsMp3 },
+	/** The results: the word replayed turns green (the app's own sound). */
+	found: { ogg: foundOgg, mp3: foundMp3 },
 	/** Each number of the countdown before a match. */
 	countdown: { ogg: countdownOgg, mp3: countdownMp3 },
 	/** The match clock at 5, 4, 3, 2 and 1 seconds left. */

@@ -24,6 +24,8 @@ export type PlayerView = {
 
 export type MatchResult = {
 	round: number;
+	/** The board at the end (start cells, then each growth's). An API from before it sends none. */
+	cells?: BoardCell[];
 	players: {
 		id: string;
 		nick: string;

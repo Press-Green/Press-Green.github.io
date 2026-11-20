@@ -37,6 +37,8 @@ export class Tv {
 	code = $state('');
 	state = $state.raw<RoomState | null>(null);
 	match = $state.raw<Match | null>(null);
+	/** The last match's board as it ended: the results replay its words on it. */
+	lastBoard = $state.raw<{ round: number; cells: BoardCell[] } | null>(null);
 	/** `performance.now()`, a few times a second: the clock and the countdown follow it. */
 	now = $state(performance.now());
 
@@ -243,6 +245,9 @@ export class Tv {
 				// finished one keeps it (its results can arrive just before this TV's clock ends).
 				if (match && state.status === 'lobby' && state.results?.round !== match.round) {
 					clearTimeout(this.timesUpTimer);
+				}
+				if (match && state.results?.round === match.round) {
+					this.lastBoard = { round: match.round, cells: match.cells };
 				}
 				if (match && match.round !== state.round) match = null;
 				if (state.status === 'lobby') match = null;

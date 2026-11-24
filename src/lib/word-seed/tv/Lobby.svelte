@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Qr from '../Qr.svelte';
 	import type { RoomState } from '../protocol.ts';
 	import { joinLink } from './join-link.ts';
@@ -15,6 +16,23 @@
 		return new Set(best > 0 ? players.filter((p) => p.score === best).map((p) => p.id) : []);
 	});
 	const host = $derived(state.players.find((p) => p.id === state.hostId));
+	const rules = $derived([
+		{ id: 'language', text: t.languages[state.config.language] ?? state.config.language },
+		{ id: 'duration', text: t.minutes(state.config.duration) },
+		{ id: 'hive', text: t.hive[state.config.hive] || state.config.hive },
+		{ id: 'grow', text: t.grows(state.config.growEvery) }
+	]);
+	// Only changes pop, not every chip as the lobby opens: a rule pops from its first change on.
+	const opening: Record<string, string> = untrack(() => Object.fromEntries(rules.map((r) => [r.id, r.text])));
+	const changed = $derived.by(() => {
+		const ids = new Set(touched);
+		for (const r of rules) if (r.text !== opening[r.id]) ids.add(r.id);
+		return ids;
+	});
+	let touched: string[] = [];
+	$effect(() => {
+		touched = [...changed];
+	});
 </script>
 
 <div class="lobby">
@@ -40,10 +58,14 @@
 				<li class="muted">{t.nobody}</li>
 			{/each}
 		</ul>
-		<div class="rules">
-			<span class="chip">{t.minutes(state.config.duration)}</span>
-			<span class="chip">{t.hive[state.config.hive] || state.config.hive}</span>
-			<span class="chip">{t.grows(state.config.growEvery)}</span>
+		<h3 class="rules-title">{t.rules}</h3>
+		<!-- The host picks the rules in the app: each one pops as it changes. -->
+		<div class="rules" aria-live="polite">
+			{#each rules as rule (rule.id)}
+				{#key rule.text}
+					<span class="chip" class:changed={changed.has(rule.id)}>{rule.text}</span>
+				{/key}
+			{/each}
 		</div>
 		<div class="waiting muted">
 			{state.players.length ? t.waitingHost(host?.nick) : t.firstHosts}
@@ -114,16 +136,46 @@
 		text-align: center;
 	}
 	.rules {
-		margin-top: 2.5vh;
+		margin-top: 1.2vh;
 		display: flex;
 		flex-wrap: wrap;
 		gap: 1vw;
 		font-size: clamp(14px, 1.8vw, 32px);
 	}
+	.rules-title {
+		margin: 3vh 0 0;
+		font-size: clamp(16px, 2vw, 36px);
+		font-weight: 600;
+		color: var(--muted);
+	}
 	.chip {
 		background: var(--surface-2);
 		border-radius: 999px;
 		padding: 0.25em 0.8em;
+	}
+	/* A rule the host just changed: swells in gold, then settles. */
+	.chip.changed {
+		animation: rule-pop 900ms ease-out both;
+	}
+	@keyframes rule-pop {
+		0% {
+			transform: scale(0.7);
+			background: var(--gold);
+			color: var(--on-primary);
+		}
+		35% {
+			transform: scale(1.15);
+			background: var(--gold);
+			color: var(--on-primary);
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.chip.changed {
+			animation: none;
+		}
 	}
 	.waiting {
 		margin-top: 2vh;

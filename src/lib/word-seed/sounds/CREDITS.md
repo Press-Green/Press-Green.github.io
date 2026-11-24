@@ -8,3 +8,4 @@
 | `times-up.ogg`, `times-up.mp3` | Kenney, *Digital Audio*, `zap1.ogg` (www.kenney.nl) | CC0 1.0 |
 | `winner.ogg`, `winner.mp3` | "Correct answer toy bi-bling" by u_o8xh7gwsrj on Pixabay (file 476370), trimmed to 0.8 s and raised 13 dB | Pixabay Content License |
 | `countdown.ogg`, `countdown.mp3` | Kenney, *Interface Sounds* 1.0, `tick_004.ogg` (www.kenney.nl) | CC0 1.0 |
+| `cheer.ogg`, `cheer.mp3` | Google Sound Library, *Crowds*, "Female Crowd Celebration" (`actions.google.com/sounds/v1/crowds/female_crowd_celebration.ogg`), first 6 s with a fade-out, loudness-normalized | CC BY 4.0 |

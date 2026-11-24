@@ -12,6 +12,8 @@ import tileMp3 from './sounds/tile.mp3';
 import tileOgg from './sounds/tile.ogg';
 import foundMp3 from './sounds/word-found.mp3';
 import foundOgg from './sounds/word-found.ogg';
+import cheerMp3 from './sounds/cheer.mp3';
+import cheerOgg from './sounds/cheer.ogg';
 
 /**
  * Short sound effects through Web Audio: each play starts a new source, so quick repeats overlap
@@ -32,6 +34,8 @@ const SOURCES = {
 	tick: { ogg: tickOgg, mp3: tickMp3 },
 	/** The winner's gold star appears in the results. */
 	winner: { ogg: winnerOgg, mp3: winnerMp3 },
+	/** The results' podium: the crowd cheers as the winner lands on the top step. */
+	cheer: { ogg: cheerOgg, mp3: cheerMp3 },
 	/** Time's up: the match clock at 0. */
 	timesUp: { ogg: timesUpOgg, mp3: timesUpMp3 }
 } as const;

@@ -5,7 +5,7 @@
 	import Match from '#lib/word-seed/tv/Match.svelte';
 	import Results from '#lib/word-seed/tv/Results.svelte';
 	import { Tv } from '#lib/word-seed/tv/tv.svelte.ts';
-	import { preloadMusic } from '#lib/word-seed/music.ts';
+	import { duckLobbyMusic, preloadMusic, startLobbyMusic, stopLobbyMusic } from '#lib/word-seed/music.ts';
 	import { preload } from '#lib/word-seed/sound.ts';
 
 	// WORD SEED TV: shows a multiplayer room on a big screen. The app links here as
@@ -16,7 +16,7 @@
 	onMount(() => {
 		tv = new Tv();
 		// Ready before the results, and listening for the first click or key that unlocks audio.
-		for (const name of ['countdown', 'tile', 'found', 'tick', 'timesUp', 'winner'] as const) preload(name);
+		for (const name of ['countdown', 'tile', 'found', 'tick', 'timesUp', 'winner', 'cheer'] as const) preload(name);
 		preloadMusic();
 		document.documentElement.lang = tv.lang;
 		const stop = tv.start();
@@ -41,6 +41,16 @@
 
 	$effect(() => {
 		document.body.classList.toggle('idle', idle);
+	});
+
+	// The lobby's music between matches: softer under the results' sounds, gone for the match
+	// (its own music starts after the countdown) and when no room shows.
+	$effect(() => {
+		const kind = tv?.screen === 'room' ? tv.view.kind : 'none';
+		if (kind === 'lobby' || kind === 'results') {
+			duckLobbyMusic(kind === 'results' ? 0.35 : 1);
+			startLobbyMusic();
+		} else stopLobbyMusic();
 	});
 
 	function toggleFullscreen() {

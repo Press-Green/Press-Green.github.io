@@ -2,9 +2,10 @@
 	import { untrack } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import Qr from '../Qr.svelte';
-	import { play } from '../sound.ts';
+	import { play, preload } from '../sound.ts';
 	import { cellKey, type BoardCell, type MatchResult, type RoomState } from '../protocol.ts';
 	import Board, { type ShownWord } from './Board.svelte';
+	import Podium, { type Tier } from './Podium.svelte';
 	import { joinLink } from './join-link.ts';
 	import type { Tv } from './tv.svelte.ts';
 
@@ -13,7 +14,8 @@
 	 * shows a word found: its tiles are pressed one after another (with the app's tile sound) and
 	 * join with honey, then the word turns green with the app's found chime. The word and its
 	 * points show above the board. Each word adds its points to the players who found it, and the
-	 * ranking reorders as the scores grow. The winner's headline and gold star wait for the last word.
+	 * ranking reorders as the scores grow. The winner's headline and gold star wait for the last word;
+	 * then the hive makes way for a podium of the best three (Podium.svelte), with the crowd cheering.
 	 *
 	 * The words found by everyone come first, then those found by fewer and fewer players, down to
 	 * the ones a single player found; within each group, longest first.
@@ -98,18 +100,24 @@
 	}
 
 	// ---- The review -----------------------------------------------------------------------------
-	/** The whole review, first word to last, at most: a long list plays faster. */
-	const REVIEW_MS = 30000;
-	/** Each word's time on screen: never so quick it can't be read, never so slow it drags. */
-	const MIN_STEP = 750;
-	const MAX_STEP = 2000;
-	/** A tile pressed after the last one, at most: about a finger's pace in the app. */
-	const MAX_PRESS_MS = 110;
+	/**
+	 * Each word: its tiles pressed one by one, then it turns green with the found chime; the next
+	 * word starts as soon as that chime ends (the last one's end brings the star). A long list takes
+	 * as long as it needs.
+	 */
+	/** A tile pressed after the last one: about a finger's pace in the app. */
+	const PRESS_MS = 110;
 	const FIRST_WORD_DELAY = 900;
+	/** The found chime's length, until its file has loaded (word-found.ogg is 0.34 s). */
+	const FOUND_FALLBACK_MS = 340;
 	/** The app's FOUND_TILES_FADE_MS: a found word's tiles turn back to plain over this long. */
 	const FADE_MS = 150;
-	/** A plain board between two words. */
-	const PAUSE_MS = 120;
+	/** From the star to the podium: the ranking's last move settles first. */
+	const PODIUM_DELAY = 1200;
+	/** The podium celebrates this long before the phones show the results (it stays up after). */
+	const PODIUM_HOLD_MS = 9000;
+	/** Without a podium (nobody scored), the headline stays this long. */
+	const NO_PODIUM_HOLD_MS = 5000;
 
 	/** Index of the word on the board, or -1. */
 	let current = $state(-1);
@@ -120,45 +128,64 @@
 	/** Words whose points have counted: each one's, as it turns green. */
 	let scored = $state(0);
 	const done = $derived(scored >= words.length);
-	/** A beat after the last word: the headline and the gold star. */
+	/** Right after the last word's chime: the headline and the gold star. */
 	let crowned = $state(false);
+	/** Then the podium, in place of the hive (when somebody scored). */
+	let podium = $state(false);
 
 	$effect(() => {
 		const timers: number[] = [];
 		const at = (ms: number, run: () => void) => timers.push(window.setTimeout(run, ms));
-		const step = Math.max(MIN_STEP, Math.min(MAX_STEP, REVIEW_MS / Math.max(1, words.length)));
-		let time = FIRST_WORD_DELAY;
-		words.forEach((word, index) => {
-			const length = word.key.length;
-			// The tiles take at most 40% of the word's time, so its green has time to show.
-			const press = Math.min(MAX_PRESS_MS, (step * 0.4) / length);
-			at(time, () => {
-				current = index;
-				tone = 'active';
-				fading = false;
-				pressed = 0;
-			});
-			for (let k = 1; k <= length; k++) {
-				at(time + (k - 1) * press, () => {
-					pressed = k;
-					play('tile', 0.5);
+		let cancelled = false;
+		// The chime's real length decides the pace: wait for it (it's preloaded with the page).
+		const ready = Promise.race([
+			preload('found'),
+			new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 1500))
+		]);
+		ready.then((buffer) => {
+			if (cancelled) return;
+			const foundMs = buffer ? buffer.duration * 1000 : FOUND_FALLBACK_MS;
+			let time = FIRST_WORD_DELAY;
+			words.forEach((word, index) => {
+				const length = word.key.length;
+				at(time, () => {
+					current = index;
+					tone = 'active';
+					fading = false;
+					pressed = 0;
 				});
-			}
-			at(time + length * press + 40, () => {
-				tone = 'found';
-				scored = index + 1;
-				play('found', 0.55);
+				for (let k = 1; k <= length; k++) {
+					at(time + (k - 1) * PRESS_MS, () => {
+						pressed = k;
+						play('tile', 0.5);
+					});
+				}
+				const foundAt = time + length * PRESS_MS + 40;
+				at(foundAt, () => {
+					tone = 'found';
+					scored = index + 1;
+					play('found', 0.55);
+				});
+				// The chime over: the tiles turn plain as it fades, and the next word starts.
+				time = foundAt + foundMs;
+				at(Math.max(foundAt, time - FADE_MS), () => (fading = true));
 			});
-			at(time + step - FADE_MS - PAUSE_MS, () => (fading = true));
-			time += step;
+			const crownAt = time;
+			at(crownAt, () => {
+				crowned = true;
+				// With the star: no star (nobody scored), no sound and no podium.
+				if (best > 0) play('winner', 0.9);
+			});
+			if (best > 0) at(crownAt + PODIUM_DELAY, () => (podium = true));
+			// Played to the end: the phones show the results; the podium stays until the host goes on.
+			at(crownAt + (best > 0 ? PODIUM_DELAY + PODIUM_HOLD_MS : NO_PODIUM_HOLD_MS), () =>
+				tv.finishReview(match.round)
+			);
 		});
-		// The last word's bubble stays up; its tiles are plain again by now.
-		at(time - PAUSE_MS + 900, () => {
-			crowned = true;
-			// With the star: no star (nobody scored), no sound.
-			if (best > 0) play('winner', 0.9);
-		});
-		return () => timers.forEach(clearTimeout);
+		return () => {
+			cancelled = true;
+			timers.forEach(clearTimeout);
+		};
 	});
 
 	const shown = $derived(current >= 0 ? words[current] : null);
@@ -208,6 +235,12 @@
 		return best === 0 || winners.length !== 1 ? t.tie : t.winner(winners[0].nick);
 	});
 
+	/** The podium's steps: each of the three best scores, with everyone who made it. */
+	const tiers: Tier[] = [...new Set(players.map((p) => p.score).filter((s) => s > 0))]
+		.sort((a, b) => b - a)
+		.slice(0, 3)
+		.map((score) => ({ players: players.filter((p) => p.score === score) }));
+
 	const reduceMotion =
 		typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 </script>
@@ -237,6 +270,11 @@
 			{/each}
 		</ol>
 	</div>
+	{#if podium}
+		<div class="stage podium-stage">
+			<Podium {tiers} colorOf={(id) => tv.colorOf(id)} title={headline} {reduceMotion} />
+		</div>
+	{:else}
 	<div class="stage">
 		<div class="word-top" aria-live="polite">
 			{#if shown}
@@ -274,6 +312,7 @@
 			<Board {cells} word={board} />
 		</div>
 	</div>
+	{/if}
 	<div class="join">
 		<p class="waiting muted">{t.nextMatch}</p>
 		<div class="qr-small">
@@ -410,6 +449,15 @@
 		display: grid;
 		grid-template-rows: minmax(26vh, auto) 1fr;
 		gap: 2vh;
+	}
+	.podium-stage {
+		display: block;
+		animation: stage-in 500ms ease-out both;
+	}
+	@keyframes stage-in {
+		from {
+			opacity: 0;
+		}
 	}
 	.word-top {
 		display: flex;

@@ -45,6 +45,13 @@ export type RoomState = {
 	round: number;
 	/** The last match's scores, until the next one starts. */
 	results: MatchResult | null;
+	/**
+	 * The round whose results a TV is still playing back, or 0: the apps wait for it. An API from
+	 * before it sends none.
+	 */
+	reviewing?: number;
+	/** The round whose results the host closed: the podium stays up until then. Older APIs send none. */
+	resultsClosed?: number;
 };
 
 export type ServerMessage =

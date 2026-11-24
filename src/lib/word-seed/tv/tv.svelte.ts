@@ -39,6 +39,8 @@ export class Tv {
 	match = $state.raw<Match | null>(null);
 	/** The last match's board as it ended: the results replay its words on it. */
 	lastBoard = $state.raw<{ round: number; cells: BoardCell[] } | null>(null);
+	/** The last round whose results this TV played back to the end: then it shows the lobby. */
+	reviewed = $state(0);
 	/** `performance.now()`, a few times a second: the clock and the countdown follow it. */
 	now = $state(performance.now());
 
@@ -48,7 +50,16 @@ export class Tv {
 		if (state.status !== 'lobby' && match && match.round === state.round) {
 			return { kind: 'match', key: `match:${match.round}` };
 		}
-		if (state.results) return { kind: 'results', key: `results:${state.results.round}` };
+		// The results play back once and the podium stays up until the host closes the results in
+		// the app; then the lobby shows the next match's rules. An API from before that: the lobby
+		// comes back once this TV played them back.
+		const { results } = state;
+		const playing =
+			results &&
+			(state.resultsClosed !== undefined
+				? state.resultsClosed !== results.round
+				: this.reviewed !== results.round);
+		if (results && playing) return { kind: 'results', key: `results:${results.round}` };
 		return { kind: 'lobby', key: 'lobby' };
 	});
 
@@ -293,6 +304,16 @@ export class Tv {
 				}
 				break;
 		}
+	}
+
+	/**
+	 * This TV played a round's results back to the end: the room lets the players see them and go on
+	 * (the first TV to finish is enough). The podium stays until the host closes the results.
+	 */
+	finishReview(round: number) {
+		this.reviewed = round;
+		const socket = this.socket;
+		if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'reviewed', round }));
 	}
 
 	// ---- TV comforts ----------------------------------------------------------------------------

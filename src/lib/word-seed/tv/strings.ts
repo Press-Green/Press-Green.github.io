@@ -30,6 +30,8 @@ const ptBR = {
 	waitingHost: (nick?: string) =>
 		nick ? `Esperando ${nick} começar` : 'Esperando o anfitrião começar',
 	minutes: duration,
+	rules: 'Regras da partida',
+	languages: { 'pt-BR': 'Português', en: 'Inglês' } as Record<string, string>,
 	hive: { small: 'Colmeia pequena', medium: 'Colmeia média', large: 'Colmeia grande' } as Record<
 		HiveSize,
 		string
@@ -79,6 +81,8 @@ const en: Strings = {
 	nobody: 'Nobody in the room yet.',
 	waitingHost: (nick) => (nick ? `Waiting for ${nick} to start` : 'Waiting for the host to start'),
 	minutes: duration,
+	rules: 'Match rules',
+	languages: { 'pt-BR': 'Portuguese', en: 'English' },
 	hive: { small: 'Small hive', medium: 'Medium hive', large: 'Large hive' },
 	grows: (s) => (s === 0 ? 'Never grows' : `Grows every ${duration(s)}`),
 	playing: 'Go!',
